@@ -1,17 +1,7 @@
-#imports functions base
+# imports functions base
 import streamlit as st
-import pandas as pd
-import pyodbc 
-import requests
-import geopandas as gpd
-import psycopg2
-import numpy as np
-import folium 
-
-#imports custom functions
-from conections import connect_to_postgresql
-from streamlit_folium import folium_static
-from st_pages import Page, show_pages,add_page_title
+# imports custom functions
+from st_pages import Page, show_pages
 
 st.set_page_config(
     page_title="Inicio",
@@ -28,7 +18,3 @@ show_pages([
     Page("main.py", "Menú de inicio"),
     Page("pages/module_1.py","Histórico de navegación"),
 ])
-
-
-
-

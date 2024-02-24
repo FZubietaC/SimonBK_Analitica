@@ -1,5 +1,6 @@
 import psycopg2
 
+
 def connect_to_postgresql():
     DB_HOST = '192.168.40.105'
     DB_PORT = 5432
@@ -21,4 +22,3 @@ def connect_to_postgresql():
     except psycopg2.Error as e:
         print(f"Error al conectar a PostgreSQL: {e}")
         return None
-

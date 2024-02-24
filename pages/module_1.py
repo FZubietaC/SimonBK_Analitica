@@ -1,16 +1,12 @@
-#imports functions base
+# imports functions base
 import streamlit as st
 import pandas as pd
-import pyodbc 
-import requests
-import geopandas as gpd
-import psycopg2
 import numpy as np
-import folium 
+import folium
 import datetime
 
 
-#imports custom functions
+# imports custom functions
 from conections import connect_to_postgresql
 from streamlit_folium import folium_static
 
@@ -20,12 +16,12 @@ conexion = connect_to_postgresql()
 
 # Realizar operaciones con la conexión si es exitosa
 if conexion:
-    #ejecutar una consulta
+    # ejecutar una consulta
     cursor_avl_records = conexion.cursor()
     cursor_avl_records.execute("SELECT * FROM avl_records;")
     rows_avl_records = cursor_avl_records.fetchall()
     columns_avl_records = [column[0] for column in cursor_avl_records.description]
-    #Transformar los datos en un Dataframe
+    # Transformar los datos en un Dataframe
     data_avl_records = pd.DataFrame.from_records(rows_avl_records,columns=columns_avl_records)
     # Cerrar cursor y conexión
     cursor_avl_records.close()
@@ -41,7 +37,7 @@ data_load_state.text('Loading data...done!')
 
 data_avl_records['latitude'] = pd.to_numeric(data_avl_records['latitude'].astype(np.float32))
 data_avl_records['longitude'] = pd.to_numeric(data_avl_records['longitude'].astype(np.float32))
-
+data_avl_records['time_stamp_event'] = pd.to_datetime(data_avl_records['time_stamp_event'], errors='coerce')
 
 #Creación del filtro por placa
 unique_plates = data_avl_records['plate'].unique()
@@ -60,11 +56,11 @@ with col2:
     end_date = st.date_input("Selecciona la fecha de fin", min_value=data_avl_records['time_stamp_event'].min().date(), max_value=data_avl_records['time_stamp_event'].max().date())
 
 # Convertir las fechas a tipo datetime64[ns]
-start_date = np.datetime64(start_date)
-end_date = np.datetime64(end_date)
+start_date = datetime.datetime(start_date.year, start_date.month, start_date.day)
+end_date = datetime.datetime(end_date.year, end_date.month, end_date.day)
 
 # Filtrar datos según las fechas y la placa seleccionada
-filtered_data_combined = data_avl_records[(data_avl_records['plate'] == selected_plate) & (data_avl_records['time_stamp_event'] >= start_date) & (data_avl_records['time_stamp_event'] < (end_date + np.timedelta64(1, 'D')))]
+filtered_data_combined = data_avl_records[(data_avl_records['plate'] == selected_plate) & (data_avl_records['time_stamp_event'] >= start_date) & (data_avl_records['time_stamp_event'] < (end_date + datetime.timedelta(days=1) - datetime.timedelta(seconds=1)))]
 
 display_mode = st.radio("Selecciona el modo de visualización:", ["Puntos", "Puntos + Líneas"])
 
