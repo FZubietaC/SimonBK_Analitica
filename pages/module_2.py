@@ -18,7 +18,7 @@ conexion = connect_to_postgresql()
 if conexion:
     # ejecutar una consulta
     cursor_avl_records = conexion.cursor()
-    cursor_avl_records.execute("SELECT * FROM avl_records;")
+    cursor_avl_records.execute("""SELECT distinct gps.*,ST_CONTAINS(geozona.geom, ST_SetSRID(ST_POINT(gps.longitude, gps.latitude), 4326)) as val_geo, CASE WHEN ST_CONTAINS(geozona.geom, ST_SetSRID(ST_POINT(gps.longitude, gps.latitude), 4326)) IS TRUE THEN 'Evento en geozona' ELSE 'Vehiculo sin reporte en geozona' END as val_geo_txt FROM public.avl_records as gps, spatial_ref.municipios as geozona WHERE LOWER(mpio_cnmbr) SIMILAR TO 'bogot%';""")
     rows_avl_records = cursor_avl_records.fetchall()
     columns_avl_records = [column[0] for column in cursor_avl_records.description]
     # Transformar los datos en un Dataframe
@@ -29,6 +29,9 @@ if conexion:
 else:
     print("No se pudo establecer la conexión a PostgreSQL.")
 
+
+st.title('Módulo validación geocercas')
+st.subheader('Validación puntos dentro de un polígono de interés')
 # Verificacion de carga de informacion.
 data_load_state = st.text('Loading data...')
 # Cargar los datos de la tabla.
@@ -122,19 +125,20 @@ if not filtered_data_combined.empty:
             ).add_to(mapa_combined)
 
     for index, row in filtered_data_combined.iterrows():
+        color = 'red' if row['val_geo'] else 'cyan'
         folium.CircleMarker(
             location=[row['latitude'], row['longitude']],
             radius=3,
-            color='blue',
             fill=True,
-            fill_color='blue',
-            fill_opacity=1.0,
+            color=color,
+            fill_color=color,
+            fill_opacity=1,
             popup=f'''
                 <div style="white-space: nowrap;">
                     <b>Imei:</b> {row["imei"]}<br>
                     <b>Placa:</b> {row["plate"]}<br>
                     <b>Fecha evento:</b> {row["time_stamp_event"]}<br>
-                    <b>Evento:</b> {row["event"]}<br>
+                    <b>Evento:</b> {row["event"]}, {row["val_geo_txt"]}<br>
                     <b>Velocidad:</b> {row["speed"]} Km/h
                 </div>
                 '''
@@ -144,5 +148,3 @@ if not filtered_data_combined.empty:
     folium_static(mapa_combined)
 else:
     st.warning("No hay registros para la placa y fecha seleccionadas.")
-
-

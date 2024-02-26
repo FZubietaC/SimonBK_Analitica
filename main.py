@@ -17,4 +17,5 @@ st.set_page_config(
 show_pages([
     Page("main.py", "Menú de inicio"),
     Page("pages/module_1.py","Histórico de navegación"),
+    Page("pages/module_2.py","geocercas")
 ])
